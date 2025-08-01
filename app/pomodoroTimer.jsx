@@ -1,22 +1,21 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Audio } from 'expo-av';
 import { useEffect, useRef, useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { BackBtn } from '../components/backBtn';
 
 export default function PomodoroTimer() {
-  const [pomodoroDuration, setPomodoroDuration] = useState(25); // minutos
-  const [breakDuration, setBreakDuration] = useState(5); // minutos
+  const [pomodoroDuration, setPomodoroDuration] = useState(25);
+  const [breakDuration, setBreakDuration] = useState(5);
   const [timeLeft, setTimeLeft] = useState(pomodoroDuration * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [isBreak, setIsBreak] = useState(false);
-
   const soundRef = useRef(null);
 
-  // Carrega o som uma vez
   useEffect(() => {
     const loadSound = async () => {
       const { sound } = await Audio.Sound.createAsync(
-        require('../assets/sounds/alarm.mp3') // Caminho para o som
+        require('../assets/sounds/alarm.mp3')
       );
       soundRef.current = sound;
     };
@@ -30,7 +29,6 @@ export default function PomodoroTimer() {
     };
   }, []);
 
-  // Lógica principal do timer
   useEffect(() => {
     let interval = null;
 
@@ -41,15 +39,20 @@ export default function PomodoroTimer() {
 
           clearInterval(interval);
 
-          // Toca o som ao mudar de estado
+          // Toca o som ao fim do ciclo
           if (soundRef.current) {
             soundRef.current.replayAsync();
           }
 
           const nextIsBreak = !isBreak;
           setIsBreak(nextIsBreak);
+
+          // Se terminou um Pomodoro, salva como tarefa concluída
+          if (!nextIsBreak) {
+            salvarPomodoroComoTarefa();
+          }
+
           const newTime = (nextIsBreak ? breakDuration : pomodoroDuration) * 60;
-          setTimeLeft(newTime);
           return newTime;
         });
       }, 1000);
@@ -57,6 +60,27 @@ export default function PomodoroTimer() {
 
     return () => clearInterval(interval);
   }, [isRunning, isBreak, pomodoroDuration, breakDuration]);
+
+  // Salva tarefa no AsyncStorage
+  const salvarPomodoroComoTarefa = async () => {
+    try {
+      const storedTasks = await AsyncStorage.getItem('tarefas');
+      const parsedTasks = storedTasks ? JSON.parse(storedTasks) : [];
+
+      const newTask = {
+        id: Date.now(),
+        title: 'Pomodoro concluído',
+        description: 'Sessão de foco finalizada',
+        category: 'foco',
+        done: true,
+      };
+
+      const updatedTasks = [...parsedTasks, newTask];
+      await AsyncStorage.setItem('tarefas', JSON.stringify(updatedTasks));
+    } catch (error) {
+      console.error('Erro ao salvar pomodoro como tarefa:', error);
+    }
+  };
 
   const formatTime = (seconds) => {
     const m = String(Math.floor(seconds / 60)).padStart(2, '0');
@@ -74,7 +98,6 @@ export default function PomodoroTimer() {
       <ScrollView>
         <View style={s.container}>
           <Text style={s.title}>Pomodoro Timer</Text>
-
           <Text style={s.modeText}>{isBreak ? '⏸ Intervalo' : '🍅 Pomodoro'}</Text>
           <Text style={s.timer}>{formatTime(timeLeft)}</Text>
 
@@ -140,14 +163,11 @@ const s = StyleSheet.create({
   text2: {
     color: '#ffffff',
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingVertical: 35,
     fontSize: 24,
     fontWeight: 'bold',
     shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 10,
-        },
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.2,
     shadowRadius: 20,
     elevation: 6,

@@ -27,6 +27,10 @@ const categorias = [
         label: 'Obrigação',
         value: 'obrigação',
         color: '#000000',
+    },{
+        label: 'Lazer',
+        value: 'lazer',
+        color: '#000000',
     },
     {
         label: 'Outro...',
@@ -41,7 +45,7 @@ export default function CategoryPicker({value, onChange}){
             onValueChange={onChange}
             items={categorias}
             value={value}
-            placeholder={{ label: 'Selecione uma categoria...', value: null }}
+            placeholder={{ label: 'Selecione a categoria da sua tarefa...', value: null }}
             style={s}
             useNativeAndroidPickerStyle={false}
         />

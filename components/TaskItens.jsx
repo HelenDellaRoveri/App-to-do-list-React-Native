@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-export default function TaskItem({ task, onToggle, onDelete, onEdit }) {
+export default function TaskItem({ task, onToggle, onStartPomodoro, onDelete, onEdit }) {
   return (
     <View style={s.task}>
       <TouchableOpacity onPress={onToggle}>
@@ -18,6 +18,11 @@ export default function TaskItem({ task, onToggle, onDelete, onEdit }) {
         </Text>
         <Text style={[s.description, task.done && s.done]}>{task.description}</Text>
         <Text style={[s.category, task.done && s.done]}>{task.category}</Text>
+        <Text style={[s.category, task.done && s.done]}>Pomodoros: {task.pomodoros || 1}</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={onStartPomodoro}>
+        <Ionicons name="play-circle-outline" size={24} color="blue" />
       </TouchableOpacity>
 
       <TouchableOpacity onPress={onDelete}>

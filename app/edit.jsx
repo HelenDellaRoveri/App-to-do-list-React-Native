@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { BackBtn } from '../components/backBtn';
 import CategoryPicker from '../components/categoriaPicker';
@@ -11,21 +11,24 @@ export default function EditTask() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
+  const [pomodoros, setPomodoros] = useState(''); 
 
-  const loadTask = async () => {
-    const saved = await AsyncStorage.getItem('@tasks');
-    const parsed = saved ? JSON.parse(saved) : [];
-    const task = parsed.find(t => t.id.toString() === id.toString());
-    if (task) {
-      setTitle(task.title);
-      setDescription(task.description);
-      setCategory(task.category);
-    }
-  };
+  const loadTask = useCallback(async () => {
+  const saved = await AsyncStorage.getItem('@tasks');
+  const parsed = saved ? JSON.parse(saved) : [];
+  const task = parsed.find(t => t.id.toString() === id.toString());
+  if (task) {
+    setTitle(task.title);
+    setDescription(task.description);
+    setCategory(task.category);
+    setPomodoros(task.pomodoros ? String(task.pomodoros) : '1');
+  }
+}, [id]); // id entra aqui porque é usado dentro da função
 
-  useEffect(() => {
-    loadTask();
-  }, []);
+useEffect(() => {
+  loadTask();
+}, [loadTask]); // sem warning agora
+
 
   const saveTask = async () => {
     const saved = await AsyncStorage.getItem('@tasks');
@@ -33,7 +36,13 @@ export default function EditTask() {
 
     const updatedTasks = parsed.map(task => {
       if (task.id.toString() === id.toString()) {
-        return { ...task, title, description, category };
+        return {
+          ...task,
+          title,
+          description,
+          category,
+          pomodoros: Math.max(parseInt(pomodoros) || 1, 1), // atualiza pomodoros, mínimo 1
+        };
       }
       return task;
     });
@@ -69,6 +78,18 @@ export default function EditTask() {
 
           <CategoryPicker value={category} onChange={setCategory} />
 
+          <TextInput
+            placeholder="Quantos pomodoros?"
+            value={pomodoros}
+            onChangeText={(text) => {
+              // aceitar só números, evitar vazio
+              const clean = text.replace(/[^0-9]/g, '');
+              setPomodoros(clean === '' ? '1' : clean);
+            }}
+            keyboardType="numeric"
+            style={s.input}
+          />
+
           <TouchableOpacity style={s.btnSalvar} onPress={saveTask}>
             <Text style={s.btnSalvarText}>Salvar</Text>
           </TouchableOpacity>
@@ -100,8 +121,8 @@ const s = StyleSheet.create({
     color: '#ffffff',
     backgroundColor: '#090909',
     paddingHorizontal: 20,
-    paddingVertical: 20,
-    shadowColor: "#000",
+    paddingVertical: 35,
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 10,
@@ -110,13 +131,13 @@ const s = StyleSheet.create({
     shadowRadius: 20,
     elevation: 6,
     fontSize: 24,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
   },
   container: {
     flex: 1,
     paddingVertical: 20,
     paddingHorizontal: 20,
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   input: {
     borderWidth: 1,
@@ -147,5 +168,5 @@ const s = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-  }
+  },
 });

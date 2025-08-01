@@ -1,13 +1,11 @@
-// import { Image } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { FlatList, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import TaskItem from '../components/TaskItens';
 
-
 export default function Home() {
-    const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [filter, setFilter] = useState('all');
   const router = useRouter();
 
@@ -17,7 +15,15 @@ export default function Home() {
 
   const loadTasks = async () => {
     const saved = await AsyncStorage.getItem('@tasks');
-    if (saved) setTasks(JSON.parse(saved));
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Garante que todas as tasks tenham o campo pomodoros como número mínimo 1
+      const normalized = parsed.map(task => ({
+        ...task,
+        pomodoros: typeof task.pomodoros === 'number' && task.pomodoros > 0 ? task.pomodoros : 1,
+      }));
+      setTasks(normalized);
+    }
   };
 
   const saveTasks = async (newTasks) => {
@@ -32,6 +38,15 @@ export default function Home() {
     saveTasks(updated);
   };
 
+    const startPomodoro = (task) => {
+        // aqui você pode fazer o que quiser para iniciar o Pomodoro, 
+        // por exemplo, navegar para a tela do timer com dados da tarefa
+        router.push({
+            pathname: '/pomodoroTimer',
+            params: { taskId: task.id }  // exemplo de passagem de parâmetro
+        });
+    };
+
   const deleteTask = (id) => {
     const updated = tasks.filter(task => task.id !== id);
     saveTasks(updated);
@@ -42,118 +57,109 @@ export default function Home() {
     if (filter === 'done') return task.done;
     if (filter === 'todo') return !task.done;
   });
-    //aqui em cima funções
-    // function goToList(){
-    //     router.push('/list')
-    // }
 
-    // const goToList = () => {
-    //     router.push('/list')
-    // }
+  return (
+    <SafeAreaView style={s.wrap}>
+      <Text style={s.text2}>To Do list</Text>
+      <ScrollView>
+        <View style={s.container}>
+          <Text style={s.title}>Minhas Tarefas</Text>
 
-    // const goToList = () => router.push('/list')
+          <View style={s.filters}>
+            <TouchableOpacity onPress={() => setFilter('all')}>
+              <Text style={filter === 'all' ? s.active : s.filter}>Todas</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setFilter('todo')}>
+              <Text style={filter === 'todo' ? s.active : s.filter}>Pendentes</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setFilter('done')}>
+              <Text style={filter === 'done' ? s.active : s.filter}>Concluídas</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('./add')}>
+              <Text style={s.filter}>Add</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('./pomodoroTimer')}>
+              <Text style={s.filter}>Pomodoro</Text>
+            </TouchableOpacity>
+          </View>
 
-    return (
-        //aqui em html
-        <SafeAreaView style={s.wrap}>
-            <Text style={s.text2}>To Do list</Text>
-            <ScrollView>
-                <View style={s.container}>
-                <Text style={s.title}>Minhas Tarefas</Text>
-
-                <View style={s.filters}>
-                    <TouchableOpacity onPress={() => setFilter('all')}>
-                        <Text style={filter === 'all' ? s.active : s.filter}>Todas</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setFilter('todo')}>
-                        <Text style={filter === 'todo' ? s.active : s.filter}>Pendentes</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setFilter('done')}>
-                        <Text style={filter === 'done' ? s.active : s.filter}>Concluídas</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => router.push('./add')}>
-                        <Text style={s.filter}>Add</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => router.push('./pomodoroTimer')}>
-                        <Text style={s.filter}>Pomodoro</Text>
-                    </TouchableOpacity>
-                </View>
-
-                <FlatList
-                    data={filteredTasks}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item }) => (
-                    <TaskItem
-                        task={item}
-                        onToggle={() => toggleDone(item.id)}
-                        onDelete={() => deleteTask(item.id)}
-                        onEdit={() => router.push({ pathname: '/edit', params: { id: item.id } })}
-                    />
-                    )}
-                />
-                </View>
-                
-            </ScrollView>
-        </SafeAreaView>
-    )
+          <FlatList
+            data={filteredTasks}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <TaskItem
+                task={item}
+                onToggle={() => toggleDone(item.id)}
+                onDelete={() => deleteTask(item.id)}
+                onEdit={() => router.push({ pathname: '/edit', params: { id: item.id } })}
+                onStartPomodoro={() => startPomodoro(item)}
+              />
+            )}
+          />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
 
 const s = StyleSheet.create({
-    text: {
-        color: '#090909',
-        backgroundColor: 'transparent',
-        paddingHorizontal: 20,
-        paddingVertical: 20,
-
+  wrap: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  text: {
+    color: '#090909',
+    backgroundColor: 'transparent',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+  },
+  text2: {
+    color: '#ffffff',
+    backgroundColor: '#090909',
+    paddingHorizontal: 20,
+    paddingVertical: 35,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 10,
     },
-    text2: {
-        color: '#ffffff',
-        backgroundColor: '#090909',
-        paddingHorizontal: 20,
-        paddingVertical: 20,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 10,
-        },
-        shadowOpacity: 0.2,
-        shadowRadius: 20,
-        elevation: 6,
-        textAlign: "center",
-        fontSize: 24,
-        fontWeight: 'bold'
-    },
-    container: { 
-        flex: 1, 
-        backgroundColor: '#fff', 
-        padding: 20 
-    },
-    title: { 
-        fontSize: 20, 
-        fontWeight: 'bold', 
-        marginBottom: 20,
-        textAlign: "center",
-    },
-    filters: { 
-        flexDirection: 'row', 
-        justifyContent: 'space-around', 
-        marginBottom: 10 
-    },
-    filter: { 
-        color: 'gray' 
-    },
-    active: { 
-        color: 'black', 
-        fontWeight: 'bold' 
-    },
-    addButton: {
-        backgroundColor: '#4CAF50',
-        borderRadius: 30,
-        padding: 10,
-        position: 'absolute',
-        alignItems: 'flex-end',
-        right: 30,
-        elevation: 4,
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 6,
+    textAlign: "center",
+    fontSize: 24,
+    fontWeight: 'bold'
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    padding: 20
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  filters: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 10
+  },
+  filter: {
+    color: 'gray'
+  },
+  active: {
+    color: 'black',
+    fontWeight: 'bold'
+  },
+  addButton: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 30,
+    padding: 10,
+    position: 'absolute',
+    alignItems: 'flex-end',
+    right: 30,
+    elevation: 4,
   }
-})
- 
+});
