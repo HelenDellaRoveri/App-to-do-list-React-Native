@@ -30,4 +30,15 @@ Designed to help you stay organized and focused, the app includes a task manager
 - Expo
 - AsyncStorage (for local data persistence)
 
+- ### Interface
+
+- <img width="428" height="760" alt="image" src="https://github.com/user-attachments/assets/f8aa6f6c-6a60-4d96-b913-70f4039ffe6e" />
+- <img width="437" height="771" alt="image" src="https://github.com/user-attachments/assets/b619b233-54a8-4ea7-8c43-92f8b8ac5b15" />
+- <img width="433" height="771" alt="image" src="https://github.com/user-attachments/assets/39c7e50c-e7bb-45a8-80ae-fd8e7a89254f" />
+- <img width="431" height="770" alt="image" src="https://github.com/user-attachments/assets/dbb909e4-f670-414d-a2e7-29c7ea0b3d25" />
+- <img width="431" height="769" alt="image" src="https://github.com/user-attachments/assets/f437ea95-864d-458a-bc0f-1abfb3ac5049" />
+
+
+
+
 ### Made with 💻 and ☕ by Helen Yohanna
